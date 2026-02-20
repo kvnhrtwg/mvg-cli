@@ -67,11 +67,46 @@ mvg -f "Münchner Freiheit" --only tram
 
 Available filters: `ubahn` / `u`, `sbahn` / `s`, `tram`, `bus`, `bahn`
 
+### Favorites
+
+Save stations under custom aliases:
+
+```bash
+mvg --save home Garching
+mvg --save office Marienplatz
+mvg --save benny "Münchner Freiheit"
+```
+
+Then use them anywhere instead of station names:
+
+```bash
+mvg -f home
+mvg -f home -t office
+mvg -f home --only ubahn
+```
+
+List all favorites:
+
+```bash
+mvg --favorites
+```
+
+Delete a favorite:
+
+```bash
+mvg --delete home
+```
+
+Favorites are stored in `~/.config/mvg-cli/favorites.json`.
+
 ## Options
 
-| Option    | Short | Description                          |
-|-----------|-------|--------------------------------------|
-| `--from`  | `-f`  | Origin station name (required)       |
-| `--to`    | `-t`  | Destination station (enables routes) |
-| `--only`  |       | Filter by transport type             |
-| `--help`  |       | Show help                            |
+| Option        | Short | Description                                |
+|---------------|-------|--------------------------------------------|
+| `--from`      | `-f`  | Origin station name or favorite            |
+| `--to`        | `-t`  | Destination station (enables routes)       |
+| `--only`      |       | Filter by transport type                   |
+| `--save`      |       | Save a favorite: `--save <alias> <station>`|
+| `--delete`    |       | Delete a favorite by alias                 |
+| `--favorites` |       | List all saved favorites                   |
+| `--help`      |       | Show help                                  |
