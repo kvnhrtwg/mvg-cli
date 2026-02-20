@@ -1,3 +1,6 @@
+import re
+from datetime import datetime, timezone
+
 import httpx
 
 BASE_URL = "https://www.mvg.de/api/bgw-pt/v3"
@@ -30,6 +33,17 @@ def resolve_transport_types(only: str | None) -> str:
     return ",".join(types)
 
 
+def parse_time(value: str) -> datetime:
+    if not re.match(r"^\d{1,2}:\d{2}$", value):
+        raise SystemExit("Invalid time format. Use HH:mm (e.g. 23:12).")
+    hours, minutes = value.split(":")
+    hours, minutes = int(hours), int(minutes)
+    if hours > 23 or minutes > 59:
+        raise SystemExit("Invalid time. Hours must be 0-23, minutes 0-59.")
+    now = datetime.now().astimezone()
+    return now.replace(hour=hours, minute=minutes, second=0, microsecond=0)
+
+
 def find_station(name: str) -> dict:
     response = httpx.get(
         f"{BASE_URL}/locations",
@@ -46,33 +60,59 @@ def find_station(name: str) -> dict:
                      + "\n".join(f"  - {s['name']}" for s in stations[:5]))
 
 
-def get_departures(global_id: str, limit: int = 10, transport_types: str | None = None) -> list[dict]:
-    response = httpx.get(
-        f"{BASE_URL}/departures",
-        params={
-            "globalId": global_id,
-            "limit": limit,
-            "transportTypes": resolve_transport_types(transport_types),
-        },
-    )
+def get_departures(
+    global_id: str,
+    limit: int = 10,
+    transport_types: str | None = None,
+    time: datetime | None = None,
+) -> list[dict]:
+    params = {
+        "globalId": global_id,
+        "limit": limit,
+        "transportTypes": resolve_transport_types(transport_types),
+    }
+    if time:
+        offset = int((time - datetime.now().astimezone()).total_seconds() / 60)
+        if offset > 0:
+            params["offsetInMinutes"] = offset
+    response = httpx.get(f"{BASE_URL}/departures", params=params)
     response.raise_for_status()
     return response.json()
 
 
 
-def get_routes(origin_id: str, destination_id: str, transport_types: str | None = None) -> list[dict]:
-    from datetime import datetime, timezone
+VALID_SPEEDS = {"slow": "SLOW", "normal": "NORMAL", "fast": "FAST"}
 
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+def resolve_speed(speed: str | None) -> str:
+    if not speed:
+        return "NORMAL"
+    key = speed.lower().strip()
+    if key not in VALID_SPEEDS:
+        raise SystemExit(
+            f"Unknown speed '{speed}'. Valid options: slow, normal, fast"
+        )
+    return VALID_SPEEDS[key]
+
+
+def get_routes(
+    origin_id: str,
+    destination_id: str,
+    transport_types: str | None = None,
+    time: datetime | None = None,
+    speed: str | None = None,
+) -> list[dict]:
+    routing_time = (time or datetime.now()).astimezone(timezone.utc)
+    routing_dt = routing_time.strftime("%Y-%m-%dT%H:%M:%S.000Z")
     response = httpx.get(
         f"{BASE_URL}/routes",
         params={
             "originStationGlobalId": origin_id,
             "destinationStationGlobalId": destination_id,
-            "routingDateTime": now,
+            "routingDateTime": routing_dt,
             "routingDateTimeIsArrival": "false",
             "transportTypes": resolve_transport_types(transport_types),
-            "changeSpeed": "NORMAL",
+            "changeSpeed": resolve_speed(speed),
             "routeType": "LEAST_TIME",
         },
     )

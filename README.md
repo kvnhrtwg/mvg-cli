@@ -67,6 +67,26 @@ mvg -f "Münchner Freiheit" --only tram
 
 Available filters: `ubahn` / `u`, `sbahn` / `s`, `tram`, `bus`, `bahn`
 
+### Specify departure time
+
+Use `--time` to query departures or routes at a specific time (HH:mm):
+
+```bash
+mvg -f Garching --time 14:30
+mvg -f Garching -t Marienplatz --time 23:12
+```
+
+### Walking speed
+
+Use `--speed` to adjust walking speed for route calculations:
+
+```bash
+mvg -f Garching -t Marienplatz --speed slow
+mvg -f Garching -t Marienplatz --speed fast
+```
+
+Available speeds: `slow`, `normal` (default), `fast`
+
 ### Favorites
 
 Save stations under custom aliases:
@@ -106,6 +126,8 @@ Favorites are stored in `~/.config/mvg-cli/favorites.json`.
 | `--from`      | `-f`  | Origin station name or favorite            |
 | `--to`        | `-t`  | Destination station (enables routes)       |
 | `--only`      |       | Filter by transport type                   |
+| `--time`      |       | Departure time in HH:mm (e.g. 23:12)      |
+| `--speed`     |       | Walking speed: slow, normal, fast          |
 | `--save`      |       | Save a favorite: `--save <alias> <station>`|
 | `--delete`    |       | Delete a favorite by alias                 |
 | `--favorites` |       | List all saved favorites                   |

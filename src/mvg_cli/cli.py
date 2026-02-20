@@ -2,7 +2,7 @@ import typer
 from rich.console import Console
 
 from mvg_cli import favorites
-from mvg_cli.api import find_station, get_departures, get_routes
+from mvg_cli.api import find_station, get_departures, get_routes, parse_time
 from mvg_cli.display import print_departures, print_routes
 
 app = typer.Typer(add_completion=False)
@@ -14,6 +14,8 @@ def main(
     station: str | None = typer.Option(None, "-f", "--from", help="Origin station name or favorite"),
     to: str | None = typer.Option(None, "-t", "--to", help="Destination station name or favorite"),
     only: str | None = typer.Option(None, "--only", help="Filter transport types (e.g. ubahn, bus, sbahn,tram)"),
+    time: str | None = typer.Option(None, "--time", help="Departure time in HH:mm format (e.g. 23:12)"),
+    speed: str | None = typer.Option(None, "--speed", help="Walking speed for routes: slow, normal, fast"),
     save: bool = typer.Option(False, "--save", help="Save a favorite: --save <alias> <station>"),
     delete: str | None = typer.Option(None, "--delete", help="Delete a favorite by alias"),
     list_favorites: bool = typer.Option(False, "--favorites", help="List all saved favorites"),
@@ -54,16 +56,18 @@ def main(
     if not station:
         raise SystemExit("Missing required option: -f / --from")
 
+    departure_time = parse_time(time) if time else None
+
     station = favorites.resolve(station)
     origin = find_station(station)
 
     if to:
         to = favorites.resolve(to)
         dest = find_station(to)
-        routes = get_routes(origin["globalId"], dest["globalId"], transport_types=only)
+        routes = get_routes(origin["globalId"], dest["globalId"], transport_types=only, time=departure_time, speed=speed)
         print_routes(routes, origin["name"], dest["name"])
     else:
-        deps = get_departures(origin["globalId"], transport_types=only)
+        deps = get_departures(origin["globalId"], transport_types=only, time=departure_time)
         print_departures(deps, origin["name"])
 
 
