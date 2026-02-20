@@ -60,7 +60,7 @@ def main(
     if to:
         to = favorites.resolve(to)
         dest = find_station(to)
-        routes = get_routes(origin["globalId"], dest["globalId"])
+        routes = get_routes(origin["globalId"], dest["globalId"], transport_types=only)
         print_routes(routes, origin["name"], dest["name"])
     else:
         deps = get_departures(origin["globalId"], transport_types=only)

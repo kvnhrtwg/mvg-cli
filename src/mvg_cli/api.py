@@ -59,10 +59,8 @@ def get_departures(global_id: str, limit: int = 10, transport_types: str | None 
     return response.json()
 
 
-ROUTE_TRANSPORT_TYPES = "SCHIFF,UBAHN,TRAM,SBAHN,BUS,REGIONAL_BUS,BAHN"
 
-
-def get_routes(origin_id: str, destination_id: str) -> list[dict]:
+def get_routes(origin_id: str, destination_id: str, transport_types: str | None = None) -> list[dict]:
     from datetime import datetime, timezone
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
@@ -73,7 +71,7 @@ def get_routes(origin_id: str, destination_id: str) -> list[dict]:
             "destinationStationGlobalId": destination_id,
             "routingDateTime": now,
             "routingDateTimeIsArrival": "false",
-            "transportTypes": ROUTE_TRANSPORT_TYPES,
+            "transportTypes": resolve_transport_types(transport_types),
             "changeSpeed": "NORMAL",
             "routeType": "LEAST_TIME",
         },
