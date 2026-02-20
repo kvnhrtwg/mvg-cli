@@ -26,6 +26,7 @@ def print_departures(departures: list[dict], station_name: str) -> None:
 
     table = Table(title=f"Departures from {station_name}", show_header=True)
     table.add_column("In", justify="right", style="bold")
+    table.add_column("Departure", justify="center")
     table.add_column("Line")
     table.add_column("Destination")
     table.add_column("Delay", justify="right")
@@ -33,6 +34,9 @@ def print_departures(departures: list[dict], station_name: str) -> None:
     for dep in departures[:10]:
         minutes = max(0, (dep["realtimeDepartureTime"] - now_ms) // 60_000)
         in_col = f"{minutes} min"
+
+        dep_time = datetime.fromtimestamp(dep["realtimeDepartureTime"] / 1000)
+        dep_col = f"{dep_time:%H:%M}"
 
         label = _color_line(dep["label"], dep["transportType"])
 
@@ -50,7 +54,7 @@ def print_departures(departures: list[dict], station_name: str) -> None:
         if dep.get("cancelled"):
             delay_col = "[red]cancelled[/red]"
 
-        table.add_row(in_col, label, destination, delay_col, style=style)
+        table.add_row(in_col, dep_col, label, destination, delay_col, style=style)
 
     console.print(table)
 
@@ -64,6 +68,7 @@ def print_routes(routes: list[dict], origin: str, destination: str) -> None:
     table.add_column("Arrival", justify="center")
     table.add_column("Duration", justify="right")
     table.add_column("Lines")
+    table.add_column("Delay", justify="right")
 
     for route in routes:
         parts = route["parts"]
@@ -78,6 +83,7 @@ def print_routes(routes: list[dict], origin: str, destination: str) -> None:
         in_minutes = max(0, int((dep_time - now).total_seconds() // 60))
 
         legs = []
+        arrival_delay = 0
         for part in parts:
             transport = part["line"]["transportType"]
             label = part["line"]["label"]
@@ -85,6 +91,16 @@ def print_routes(routes: list[dict], origin: str, destination: str) -> None:
                 legs.append("[dim]walk[/dim]")
             else:
                 legs.append(_color_line(label, transport))
+                delay = part["to"].get("arrivalDelayInMinutes", 0) or 0
+                if delay:
+                    arrival_delay = delay
+
+        if arrival_delay > 0:
+            delay_col = f"[red]+{arrival_delay}[/red]"
+        elif arrival_delay < 0:
+            delay_col = f"[green]{arrival_delay}[/green]"
+        else:
+            delay_col = ""
 
         table.add_row(
             f"{in_minutes} min",
@@ -92,6 +108,7 @@ def print_routes(routes: list[dict], origin: str, destination: str) -> None:
             f"{arr_time:%H:%M}",
             f"{duration} min",
             " → ".join(legs),
+            delay_col,
         )
 
     console.print(table)
