@@ -94,6 +94,9 @@ def print_routes(routes: list[dict], origin: str, destination: str) -> None:
                 delay = part["to"].get("arrivalDelayInMinutes", 0) or 0
                 if delay:
                     arrival_delay = delay
+            interchange = part.get("interchangePathDurationInMinutes", 0) or 0
+            if interchange:
+                legs.append(f"[dim]{interchange} min[/dim]")
 
         if arrival_delay > 0:
             delay_col = f"[red]+{arrival_delay}[/red]"
