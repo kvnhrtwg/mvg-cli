@@ -87,6 +87,16 @@ mvg -f Garching -t Marienplatz --speed fast
 
 Available speeds: `slow`, `normal` (default), `fast`
 
+### JSON output
+
+Use `--json` to get raw API data for scripting or piping:
+
+```bash
+mvg -f Garching --json
+mvg -f Garching -t Marienplatz --json
+mvg -f Garching --json | jq '.[0].destination'
+```
+
 ### Favorites
 
 Save stations under custom aliases:
@@ -128,6 +138,7 @@ Favorites are stored in `~/.config/mvg-cli/favorites.json`.
 | `--only`      |       | Filter by transport type                   |
 | `--time`      |       | Departure time in HH:mm (e.g. 23:12)      |
 | `--speed`     |       | Walking speed: slow, normal, fast          |
+| `--json`      |       | Output raw JSON instead of a table         |
 | `--save`      |       | Save a favorite: `--save <alias> <station>`|
 | `--delete`    |       | Delete a favorite by alias                 |
 | `--favorites` |       | List all saved favorites                   |
