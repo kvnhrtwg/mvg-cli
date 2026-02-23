@@ -1,13 +1,22 @@
 import json
+import time as time_mod
 
 import typer
 from rich.console import Console
+from rich.live import Live
 
 from mvg_cli import favorites
 from mvg_cli.api import find_station, get_departures, get_routes, parse_time
-from mvg_cli.display import format_departures, format_routes, print_departures, print_routes
+from mvg_cli.display import (
+    build_departures_table,
+    build_routes_table,
+    format_departures,
+    format_routes,
+    print_departures,
+    print_routes,
+)
 
-app = typer.Typer(add_completion=False)
+app = typer.Typer(add_completion=False, context_settings={"help_option_names": ["-h", "--help"]})
 
 
 @app.command()
@@ -19,12 +28,16 @@ def main(
     time: str | None = typer.Option(None, "--time", help="Departure time in HH:mm format (e.g. 23:12)"),
     speed: str | None = typer.Option(None, "--speed", help="Walking speed for routes: slow, normal, fast"),
     json_output: bool = typer.Option(False, "--json", help="Output raw JSON instead of a table"),
+    live: bool = typer.Option(False, "--live", help="Auto-refresh every 10 seconds"),
     save: bool = typer.Option(False, "--save", help="Save a favorite: --save <alias> <station>"),
     delete: str | None = typer.Option(None, "--delete", help="Delete a favorite by alias"),
     list_favorites: bool = typer.Option(False, "--favorites", help="List all saved favorites"),
 ) -> None:
     """Show next departures or routes from Munich public transport stations."""
     console = Console()
+
+    if live and json_output:
+        raise SystemExit("--live and --json cannot be used together.")
 
     if list_favorites:
         favs = favorites.load()
@@ -67,6 +80,25 @@ def main(
     if to:
         to = favorites.resolve(to)
         dest = find_station(to)
+
+    def fetch_table():
+        if to:
+            routes = get_routes(origin["globalId"], dest["globalId"], transport_types=only, time=departure_time, speed=speed)
+            return build_routes_table(routes, origin["name"], dest["name"])
+        else:
+            deps = get_departures(origin["globalId"], transport_types=only, time=departure_time)
+            return build_departures_table(deps, origin["name"])
+
+    if live:
+        try:
+            console.clear()
+            with Live(fetch_table(), console=console, refresh_per_second=1) as live_display:
+                while True:
+                    time_mod.sleep(10)
+                    live_display.update(fetch_table())
+        except KeyboardInterrupt:
+            pass
+    elif to:
         routes = get_routes(origin["globalId"], dest["globalId"], transport_types=only, time=departure_time, speed=speed)
         if json_output:
             print(json.dumps(format_routes(routes), indent=2, ensure_ascii=False))

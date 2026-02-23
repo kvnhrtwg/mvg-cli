@@ -84,8 +84,7 @@ def format_routes(routes: list[dict]) -> list[dict]:
     return rows
 
 
-def print_departures(departures: list[dict], station_name: str) -> None:
-    console = Console()
+def build_departures_table(departures: list[dict], station_name: str) -> Table:
     now_ms = int(time.time() * 1000)
 
     table = Table(title=f"Departures from {station_name}", show_header=True)
@@ -120,12 +119,14 @@ def print_departures(departures: list[dict], station_name: str) -> None:
 
         table.add_row(in_col, dep_col, label, destination, delay_col, style=style)
 
-    console.print(table)
+    return table
 
 
-def print_routes(routes: list[dict], origin: str, destination: str) -> None:
-    console = Console()
+def print_departures(departures: list[dict], station_name: str) -> None:
+    Console().print(build_departures_table(departures, station_name))
 
+
+def build_routes_table(routes: list[dict], origin: str, destination: str) -> Table:
     table = Table(title=f"Routes from {origin} to {destination}", show_header=True, show_lines=True)
     table.add_column("In", justify="right", style="bold")
     table.add_column("Departure", justify="center")
@@ -183,4 +184,8 @@ def print_routes(routes: list[dict], origin: str, destination: str) -> None:
             delay_col,
         )
 
-    console.print(table)
+    return table
+
+
+def print_routes(routes: list[dict], origin: str, destination: str) -> None:
+    Console().print(build_routes_table(routes, origin, destination))

@@ -87,6 +87,17 @@ mvg -f Garching -t Marienplatz --speed fast
 
 Available speeds: `slow`, `normal` (default), `fast`
 
+### Live mode
+
+Use `--live` to auto-refresh departures or routes every 10 seconds:
+
+```bash
+mvg -f Garching --live
+mvg -f Garching -t Marienplatz --live
+```
+
+Press `Ctrl+C` to stop.
+
 ### JSON output
 
 Use `--json` to get raw API data for scripting or piping:
@@ -138,8 +149,9 @@ Favorites are stored in `~/.config/mvg-cli/favorites.json`.
 | `--only`      |       | Filter by transport type                   |
 | `--time`      |       | Departure time in HH:mm (e.g. 23:12)      |
 | `--speed`     |       | Walking speed: slow, normal, fast          |
+| `--live`      |       | Auto-refresh every 10 seconds              |
 | `--json`      |       | Output raw JSON instead of a table         |
 | `--save`      |       | Save a favorite: `--save <alias> <station>`|
 | `--delete`    |       | Delete a favorite by alias                 |
 | `--favorites` |       | List all saved favorites                   |
-| `--help`      |       | Show help                                  |
+| `--help`      | `-h`  | Show help                                  |
